@@ -2,7 +2,7 @@
 #include <iomanip>
 #include <cstring>
 #include <random>
-#include "../monocypher.hpp"
+#include "../include/monocypher.hpp"
 
 int test_elligator() {
     // Step 1: Generate a random scalar b (32 bytes)

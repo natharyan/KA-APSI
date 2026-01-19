@@ -46,30 +46,30 @@ int parse_args(int argc, char *argv[],
 
 int main(int argc, char *argv[]) {
 
-    size_t rec_size, sen_size;
+    size_t rec_sz, sen_sz;
     string mode = "lan";
     
     // Parse Arguments
-    if(parse_args(argc, argv, rec_size, sen_size, mode)){
+    if(parse_args(argc, argv, rec_sz, sen_sz, mode)){
         return 1;
     }
     
     random_device rd;
-    vector<uint256_t> receiver_input(rec_size);
-    vector<uint256_t> sender_input(sen_size);
+    vector<uint256_t> receiver_input(rec_sz);
+    vector<uint256_t> sender_input(sen_sz);
     
     
     
     // Generate receiver input
-    for (size_t i = 0; i < rec_size; i++) {
+    for (size_t i = 0; i < rec_sz; i++) {
         for (size_t j = 0; j < 32; j++) {
             receiver_input[i].bytes[j] = rd() & 0xFF;
         }
     }
     
     // Generate sender input (with some overlap for testing)
-    for (size_t i = 0; i < sen_size; i++) {
-        if (i < rec_size / 2) {
+    for (size_t i = 0; i < sen_sz; i++) {
+        if (i < rec_sz / 2) {
             // First half overlaps with receiver
             sender_input[i] = receiver_input[i];
         } else {
@@ -93,13 +93,13 @@ int main(int argc, char *argv[]) {
         bw_kbps = 10000000; // 10 Gbps
     }
 
-    printf("Receiver size: %zu, Sender size: %zu\n", rec_size, sen_size);
+    printf("Receiver size: %zu, Sender size: %zu\n", rec_sz, sen_sz);
     printf("Network mode: %s\n", mode.c_str());
     NetworkSimulator net(lat_cs, lat_sc, bw_kbps);
     
     // Create instances with different inputs
-    Receiver receiver(receiver_input.data(), rec_size);
-    Sender sender(sender_input.data(), sen_size);
+    Receiver receiver(receiver_input.data(), rec_sz);
+    Sender sender(sender_input.data(), sen_sz);
     
     // Both parties commit
     receiver.commit();
