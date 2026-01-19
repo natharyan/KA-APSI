@@ -13,54 +13,9 @@
 #include <chrono>
 #include "monocypher.hpp"
 #include "helpers.hpp"
+#include "network.hpp"
 
 using namespace std;
-
-struct NetworkSimulator {
-    // latency in ms, bandwidth in kilobits per second (kbps)
-    double latency_ms_client_to_server = 1.0;
-    double latency_ms_server_to_client = 1.0;
-    long bandwidth_kbps = 50000;
-
-    std::atomic<size_t> bytes_client_to_server{0};
-    std::atomic<size_t> bytes_server_to_client{0};
-
-    NetworkSimulator() = default;
-    NetworkSimulator(double lcs, double lsc, long bw)
-        : latency_ms_client_to_server(lcs),
-          latency_ms_server_to_client(lsc),
-          bandwidth_kbps(bw) {}
-
-    // compute transmission delay in ms given bytes and bandwidth (kbps).
-    static double transmit_ms_for_bytes(size_t bytes, long kbps) {
-        if (kbps <= 0) return 0.0;
-        double ms = (double)bytes * 8.0 / (double)kbps;
-        return ms;
-    }
-
-    // simulate sending from client to server: blocks for latency+transmit and increments counters.
-    void sendClientToServer(const std::string &msg) {
-        size_t bytes = msg.size();
-        bytes_client_to_server += bytes;
-        double ttx = transmit_ms_for_bytes(bytes, bandwidth_kbps);
-        double total = latency_ms_client_to_server + ttx;
-        std::this_thread::sleep_for(std::chrono::duration<double, std::milli>(total));
-    }
-
-    // simulate sending from server to client
-    void sendServerToClient(const std::string &msg) {
-        size_t bytes = msg.size();
-        bytes_server_to_client += bytes;
-        double ttx = transmit_ms_for_bytes(bytes, bandwidth_kbps);
-        double total = latency_ms_server_to_client + ttx;
-        std::this_thread::sleep_for(std::chrono::duration<double, std::milli>(total));
-    }
-
-    // helpers to read totals (in bytes)
-    size_t totalSentBytes() const { return bytes_client_to_server + bytes_server_to_client; }
-    size_t totalClientToServer() const { return bytes_client_to_server.load(); }
-    size_t totalServerToClient() const { return bytes_server_to_client.load(); }
-};
 
 class Receiver {
 public:

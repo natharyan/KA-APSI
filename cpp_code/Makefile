@@ -4,7 +4,7 @@ CXXFLAGS = -std=c++17 -Wall -I. -I/opt/homebrew/opt/boost/include -I/opt/homebre
 LDFLAGS = -L/opt/homebrew/lib -lntl -lgmp
 
 # Source files
-SRCS = apsi.cpp monocypher.c helpers.cpp
+SRCS = apsi.cpp monocypher.c helpers.cpp network.cpp
 
 # Target executable
 TARGET_DIR = bin
