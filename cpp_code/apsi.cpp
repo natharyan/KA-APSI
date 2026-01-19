@@ -14,115 +14,117 @@
 #include "monocypher.hpp"
 #include "helpers.hpp"
 #include "network.hpp"
+#include "sender.hpp"
+#include "receiver.hpp"
 
 using namespace std;
 
-class Receiver {
-public:
-    // Constructor
-    Receiver(const uint256_t *input, size_t input_len) {
-        this->input = vector<uint256_t>(input, input + input_len);
-        this->input_len = input_len;
+// class Receiver {
+// public:
+//     // Constructor
+//     Receiver(const uint256_t *input, size_t input_len) {
+//         this->input = vector<uint256_t>(input, input + input_len);
+//         this->input_len = input_len;
 
-        ka_messages = vector<uint256_t>();
-        polys = vector<vector<uint256_t>>();
-        merkle_root = uint256_t();
-    }
+//         ka_messages = vector<uint256_t>();
+//         polys = vector<vector<uint256_t>>();
+//         merkle_root = uint256_t();
+//     }
 
-    uint256_t merkle_root;
-    vector<vector<uint256_t>> polys;
-    size_t input_len;
-    vector<uint256_t> ka_messages;
-    vector<uint256_t> randomness;
-    vector<uint256_t> input;
-};
+//     uint256_t merkle_root;
+//     vector<vector<uint256_t>> polys;
+//     size_t input_len;
+//     vector<uint256_t> ka_messages;
+//     vector<uint256_t> randomness;
+//     vector<uint256_t> input;
+// };
 
-class Sender {
-public:
-    // Constructor
-    Sender(const uint256_t *input, size_t input_len) {
-        this->input = vector<uint256_t>(input, input + input_len);
-        this->input_len = input_len;
+// class Sender {
+// public:
+//     // Constructor
+//     Sender(const uint256_t *input, size_t input_len) {
+//         this->input = vector<uint256_t>(input, input + input_len);
+//         this->input_len = input_len;
 
-        random_values = vector<uint256_t>();
-        merkle_root = uint256_t();
-        merkle_leaves = vector<uint256_t>();
-    }
+//         random_values = vector<uint256_t>();
+//         merkle_root = uint256_t();
+//         merkle_leaves = vector<uint256_t>();
+//     }
 
-    uint256_t merkle_root;
-    vector<uint256_t> merkle_leaves;
-private:
-    vector<uint256_t> input;
-    size_t input_len;
-    vector<uint256_t> random_values;
+//     uint256_t merkle_root;
+//     vector<uint256_t> merkle_leaves;
+// private:
+//     vector<uint256_t> input;
+//     size_t input_len;
+//     vector<uint256_t> random_values;
 
-    friend void commit_Sender(Sender &sender);
-    friend vector<uint256_t> intersect(Receiver &receiver, Sender &sender, NetworkSimulator &net);
+//     friend void commit_Sender(Sender &sender);
+//     friend vector<uint256_t> intersect(Receiver &receiver, Sender &sender, NetworkSimulator &net);
     
-};
+// };
 
 // Commitment phase for the receiver.
-void commit_Receiver(Receiver &receiver){
-    // 1. Generate KA messages.
-    receiver.ka_messages.resize(receiver.input_len);
-    tie(receiver.ka_messages, receiver.randomness) = gen_elligator_messages(receiver.input_len);
+// void commit_Receiver(Receiver &receiver){
+//     // 1. Generate KA messages.
+//     receiver.ka_messages.resize(receiver.input_len);
+//     tie(receiver.ka_messages, receiver.randomness) = gen_elligator_messages(receiver.input_len);
     
-    // 2. Create uniform hashing table.
-    size_t bin_size = receiver.input_len / log2(receiver.input_len); // n/log(n)
-    vector<vector<uint256_t>> T_Rec(bin_size);
+//     // 2. Create uniform hashing table.
+//     size_t bin_size = receiver.input_len / log2(receiver.input_len); // n/log(n)
+//     vector<vector<uint256_t>> T_Rec(bin_size);
     
-    // Hash each input message and place it into the correct bin using H_1(input)
-    for (const auto& current_message : receiver.input) {
-        uint256_t h1_message = H_1(current_message);
-        uint8_t hash[32];
-        crypto_blake2b(hash, sizeof(hash), h1_message.bytes, 32);
-        size_t bin_index = H_bin(hash, bin_size);
-        T_Rec[bin_index].push_back(current_message);
-    }
+//     // Hash each input message and place it into the correct bin using H_1(input)
+//     for (const auto& current_message : receiver.input) {
+//         uint256_t h1_message = H_1(current_message);
+//         uint8_t hash[32];
+//         crypto_blake2b(hash, sizeof(hash), h1_message.bytes, 32);
+//         size_t bin_index = H_bin(hash, bin_size);
+//         T_Rec[bin_index].push_back(current_message);
+//     }
     
-    // 3. Create polynomials using (H_1(y_i), ka_message_i) pairs
-    size_t ka_counter = 0;
-    for (size_t i = 0; i < bin_size; i++) {
-        const auto& bin_elements = T_Rec[i];
-        if (bin_elements.empty()) {
-            continue;
-        }
+//     // 3. Create polynomials using (H_1(y_i), ka_message_i) pairs
+//     size_t ka_counter = 0;
+//     for (size_t i = 0; i < bin_size; i++) {
+//         const auto& bin_elements = T_Rec[i];
+//         if (bin_elements.empty()) {
+//             continue;
+//         }
         
-        vector<uint256_t> H1_values;
-        vector<uint256_t> ka_messages_for_bin;
-        for (const auto& element : bin_elements) {
-            H1_values.push_back(H_1(element)); // H_1(y_i)
-            ka_messages_for_bin.push_back(receiver.ka_messages[ka_counter]);
-            ka_counter++;
-        }
-        receiver.polys.push_back(Lagrange_Polynomial(H1_values, ka_messages_for_bin));
-    }
+//         vector<uint256_t> H1_values;
+//         vector<uint256_t> ka_messages_for_bin;
+//         for (const auto& element : bin_elements) {
+//             H1_values.push_back(H_1(element)); // H_1(y_i)
+//             ka_messages_for_bin.push_back(receiver.ka_messages[ka_counter]);
+//             ka_counter++;
+//         }
+//         receiver.polys.push_back(Lagrange_Polynomial(H1_values, ka_messages_for_bin));
+//     }
 
-    // 4. Merkle tree root using the evaluations at roots of unity.
-    receiver.merkle_root = Merkle_Root_Receiver(receiver.polys, receiver.input_len);
-}
+//     // 4. Merkle tree root using the evaluations at roots of unity.
+//     receiver.merkle_root = Merkle_Root_Receiver(receiver.polys, receiver.input_len);
+// }
 
-void commit_Sender(Sender &sender){
-    sender.random_values.resize(sender.input_len);
-    sender.merkle_leaves.resize(sender.input_len);
+// void commit_Sender(Sender &sender){
+//     sender.random_values.resize(sender.input_len);
+//     sender.merkle_leaves.resize(sender.input_len);
     
-    // 1. Generate input_len random field elements.
-    for (size_t i = 0; i < sender.input_len; i++) {
-        uint8_t random_value[32];
-        random_device rd;
-        for (size_t j = 0; j < 32; j++) {
-            random_value[j] = rd() & 0xFF;
-        }
-        memcpy(&sender.random_values[i].bytes, random_value, 32);
-    }
+//     // 1. Generate input_len random field elements.
+//     for (size_t i = 0; i < sender.input_len; i++) {
+//         uint8_t random_value[32];
+//         random_device rd;
+//         for (size_t j = 0; j < 32; j++) {
+//             random_value[j] = rd() & 0xFF;
+//         }
+//         memcpy(&sender.random_values[i].bytes, random_value, 32);
+//     }
     
-    // 2. Compute the Merkle leaves using concatenation and H_1
-    for (size_t k = 0; k < sender.input_len; k++) {
-        // Use concatenate_and_hash which effectively does H_1(x_i || r_i)
-        sender.merkle_leaves[k] = concatenate_and_hash(sender.input[k], sender.random_values[k]);
-    }
-    sender.merkle_root = Merkle_Root_Sender(sender.merkle_leaves);
-}
+//     // 2. Compute the Merkle leaves using concatenation and H_1
+//     for (size_t k = 0; k < sender.input_len; k++) {
+//         // Use concatenate_and_hash which effectively does H_1(x_i || r_i)
+//         sender.merkle_leaves[k] = concatenate_and_hash(sender.input[k], sender.random_values[k]);
+//     }
+//     sender.merkle_root = Merkle_Root_Sender(sender.merkle_leaves);
+// }
 
 vector<uint256_t> intersect(Receiver &receiver, Sender &sender, NetworkSimulator &net) {
     auto intersection_start = chrono::high_resolution_clock::now();
@@ -392,8 +394,9 @@ int main(int argc, char *argv[]) {
     Receiver receiver(receiver_input.data(), receiver_size);
     Sender sender(sender_input.data(), sender_size);
     
-    commit_Receiver(receiver);
-    commit_Sender(sender);
+    // Commits are now methods of Sender/Receiver Classes
+    receiver.commit();
+    sender.commit();
     
     vector<uint256_t> intersection = intersect(receiver, sender, net);
 

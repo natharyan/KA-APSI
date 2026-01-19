@@ -1,10 +1,12 @@
+
+# TO-DO: Make an equivalent version for Linux
 # Compiler and flags
 CXX = clang++
-CXXFLAGS = -std=c++17 -Wall -I. -I/opt/homebrew/opt/boost/include -I/opt/homebrew/Cellar/ntl/11.5.1/include
+CXXFLAGS = -std=c++17 -Wall -I. -I/opt/homebrew/opt/ntl/include
 LDFLAGS = -L/opt/homebrew/lib -lntl -lgmp
 
 # Source files
-SRCS = apsi.cpp monocypher.c helpers.cpp network.cpp
+SRCS = apsi.cpp monocypher.c helpers.cpp network.cpp sender.cpp receiver.cpp
 
 # Target executable
 TARGET_DIR = bin

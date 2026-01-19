@@ -1,3 +1,6 @@
+#ifndef HELPERS_HPP
+#define HELPERS_HPP
+
 #include <iostream>
 #include <iomanip>
 #include <cstring>
@@ -64,3 +67,5 @@ namespace std {
         }
     };
 }
+
+#endif
