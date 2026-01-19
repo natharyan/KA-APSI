@@ -6,6 +6,8 @@
 #include <string>
 #include <cmath>
 
+// TODO: Add @brief
+
 struct NetworkSimulator {
     // latency in ms, bandwidth in kilobits per second (kbps)
     long latency_ms_client_to_server = 1;

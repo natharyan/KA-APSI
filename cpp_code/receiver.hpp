@@ -5,6 +5,8 @@
 #include <cstddef>
 #include "helpers.hpp"
 
+// TODO: Add @brief
+
 class Receiver {
 public:
     uint256_t merkle_root;
@@ -13,7 +15,7 @@ public:
     vector<uint256_t> ka_messages;
     vector<uint256_t> randomness;
     vector<uint256_t> input;
-    
+
     Receiver(const uint256_t *input, size_t input_len);
     void commit();
 };

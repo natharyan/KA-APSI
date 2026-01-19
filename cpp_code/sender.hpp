@@ -5,6 +5,8 @@
 #include <vector>
 #include <cstddef>
 
+// TODO: Add @brief
+
 // Forward declarations
 class Receiver;
 struct NetworkSimulator;
